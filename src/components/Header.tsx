@@ -1,41 +1,83 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, Dribbble } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Moon, Sun, Menu } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { MenuOverlay } from './MenuOverlay';
+
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
-  const isLanding = location.pathname === '/';
+
+  const [profile, setProfile] = useState<{ name: string; avatar: string }>(() => {
+    try {
+      const stored = localStorage.getItem('margal_user_profile');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return {
+          name: parsed.name || 'Ka-Margal',
+          avatar: parsed.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop'
+        };
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return {
+      name: 'Ka-Margal',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop'
+    };
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const stored = localStorage.getItem('margal_user_profile');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setProfile({
+            name: parsed.name || 'Ka-Margal',
+            avatar: parsed.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop'
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('margal_profile_updated', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('margal_profile_updated', handleStorageChange);
+    };
+  }, []);
+
   return (
     <>
-      <header
-        className={`sticky top-0 z-50 w-full border-b transition-colors ${isLanding ? 'border-transparent bg-transparent' : 'border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md'}`}>
+      <header className="relative w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            {/* Hamburger trigger */}
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              aria-label="Open menu"
-              className="p-2.5 -ml-2.5 rounded-md border border-slate-200/60 dark:border-slate-700/60 hover:border-pastel-coral dark:hover:border-pastel-coral text-slate-700 dark:text-slate-200 transition-colors group">
-              
-              <Menu
-                size={20}
-                className="group-hover:text-pastel-coral transition-colors" />
-              
-            </button>
+          <div className="grid grid-cols-3 items-center h-16 sm:h-20">
+            {/* Hamburger trigger — left */}
+            <div className="flex items-center">
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                aria-label="Open menu"
+                className="p-2.5 -ml-2.5 rounded-md border border-slate-200/60 dark:border-slate-700/60 hover:border-pastel-coral dark:hover:border-pastel-coral text-slate-700 dark:text-slate-200 transition-colors group">
+                <Menu
+                  size={20}
+                  className="group-hover:text-pastel-coral transition-colors" />
+              </button>
+            </div>
 
-            {/* Centered logo */}
+            {/* Centered logo — middle */}
             <Link
               to="/"
-              className="flex items-center gap-2 group absolute left-1/2 -translate-x-1/2">
-              
-              <div className="p-1.5 bg-gradient-to-br from-pastel-blue to-pastel-blue-dark rounded-lg text-white shadow-sm group-hover:shadow-md transition-all">
-                <Dribbble size={20} />
-              </div>
-              <div className="hidden sm:flex flex-col">
+              className="flex items-center gap-2 group justify-self-center">
+              <img 
+                src="/margal-logo.jpg" 
+                alt="Margal Sports Center Logo" 
+                className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full border border-slate-200 dark:border-slate-800 shadow-sm group-hover:scale-105 transition-transform"
+              />
+              <div className="flex flex-col">
                 <span className="font-display font-bold text-base leading-none tracking-wider text-slate-900 dark:text-white uppercase">
                   Margal
                 </span>
@@ -46,19 +88,22 @@ export function Header() {
             </Link>
 
             {/* Right actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 justify-self-end">
               <button
                 onClick={toggleTheme}
                 className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors rounded-full hover:bg-slate-100/60 dark:hover:bg-slate-800/60"
                 aria-label="Toggle theme">
-                
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              <Link
-                to="/book"
-                className="hidden sm:inline-flex items-center px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-900 dark:text-white border border-slate-900 dark:border-white rounded-full hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors">
-                
-                Book Now
+              <Link to="/profile" className="flex items-center gap-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-1 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer select-none">
+                <img
+                  src={profile.avatar}
+                  alt="User Profile"
+                  className="w-7 h-7 rounded-full object-cover border border-[#C69214] shadow-sm shrink-0"
+                />
+                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 hidden sm:inline uppercase tracking-wider max-w-[80px] truncate">
+                  {profile.name}
+                </span>
               </Link>
             </div>
           </div>
@@ -66,6 +111,6 @@ export function Header() {
       </header>
 
       <MenuOverlay isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-    </>);
-
+    </>
+  );
 }

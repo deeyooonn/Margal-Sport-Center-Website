@@ -12,8 +12,11 @@
   html {
     scroll-behavior: smooth;
   }
+  body, button, input, select, textarea {
+    @apply font-body;
+  }
   body {
-    @apply font-body bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300;
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-wide;

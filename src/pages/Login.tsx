@@ -1,18 +1,78 @@
-import React, { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Dribbble } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+
+  const handleAdminLogin = () => {
     setIsLoading(true);
-    // Mock login
     setTimeout(() => {
       setIsLoading(false);
-      toast.success('Successfully logged in!');
+      
+      const adminProfile = {
+        name: 'Margal Admin',
+        email: 'admin@margalsports.com',
+        phone: '0917-555-9999',
+        fbLink: 'facebook.com/margal.sports.admin',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=256&auto=format&fit=crop',
+        createdDate: 'January 2022',
+        tier: 'Court Director',
+        role: 'admin'
+      };
+      
+      localStorage.setItem('margal_user_profile', JSON.stringify(adminProfile));
+      window.dispatchEvent(new Event('margal_profile_updated'));
+      toast.success('Logged in successfully as Administrator!');
+      navigate('/book');
+    }, 1000);
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const email = formData.get('email') as string;
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      
+      if (email.toLowerCase().includes('admin')) {
+        const adminProfile = {
+          name: 'Margal Admin',
+          email: email,
+          phone: '0917-555-9999',
+          fbLink: 'facebook.com/margal.sports.admin',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=256&auto=format&fit=crop',
+          createdDate: 'January 2022',
+          tier: 'Court Director',
+          role: 'admin'
+        };
+        localStorage.setItem('margal_user_profile', JSON.stringify(adminProfile));
+        window.dispatchEvent(new Event('margal_profile_updated'));
+        toast.success('Logged in successfully as Administrator!');
+      } else {
+        const stored = localStorage.getItem('margal_user_profile');
+        let normalProfile = stored ? JSON.parse(stored) : null;
+        if (!normalProfile || normalProfile.role === 'admin') {
+          normalProfile = {
+            name: 'Juan Dela Cruz',
+            email: email || 'juan.delacruz@example.com',
+            phone: '0917-555-0123',
+            fbLink: 'facebook.com/ka.margal.player',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop',
+            createdDate: 'April 2023',
+            tier: 'Ka-Margal Elite',
+            role: 'user'
+          };
+          localStorage.setItem('margal_user_profile', JSON.stringify(normalProfile));
+          window.dispatchEvent(new Event('margal_profile_updated'));
+        }
+        toast.success('Successfully logged in!');
+      }
       navigate('/book');
     }, 1000);
   };
@@ -34,9 +94,11 @@ export function Login() {
         className="max-w-md w-full space-y-8 bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800 relative z-10">
         
         <div className="text-center">
-          <div className="mx-auto w-12 h-12 bg-gradient-to-br from-pastel-blue to-pastel-blue-dark rounded-xl text-white flex items-center justify-center mb-4 shadow-md">
-            <Dribbble size={28} />
-          </div>
+          <img 
+            src="/margal-logo.jpg" 
+            alt="Margal Logo" 
+            className="mx-auto w-16 h-16 object-contain rounded-full border-2 border-[#1A3673] shadow-md mb-4"
+          />
           <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-white uppercase tracking-wide">
             Welcome Back
           </h2>
@@ -159,6 +221,17 @@ export function Login() {
                 
                 </span>
               }
+            </button>
+          </div>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleAdminLogin}
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border-2 border-[#1A3673] hover:bg-[#1A3673] hover:text-white dark:border-[#C69214] dark:text-[#C69214] dark:hover:bg-[#C69214] dark:hover:text-slate-900 text-[#1A3673] font-bold text-sm rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center gap-2"
+            >
+              <Shield size={16} /> Log In as Admin (Demo)
             </button>
           </div>
         </form>

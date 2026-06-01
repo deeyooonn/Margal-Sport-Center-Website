@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import {
   Calendar,
   Users,
-  Clock,
   MessageSquare,
   Send,
   Trophy,
@@ -13,7 +12,7 @@ import {
 import { toast } from 'sonner';
 export function Events() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {

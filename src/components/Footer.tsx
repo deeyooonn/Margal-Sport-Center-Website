@@ -1,10 +1,8 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   MapPin,
   Phone,
   Clock,
-  Dribbble,
   Facebook,
   Instagram } from
 'lucide-react';
@@ -16,9 +14,11 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="p-1.5 bg-gradient-to-br from-pastel-blue to-pastel-blue-dark rounded-md text-white">
-                <Dribbble size={20} />
-              </div>
+              <img 
+                src="/margal-logo.jpg" 
+                alt="Margal Logo" 
+                className="w-10 h-10 object-contain rounded-full border border-slate-700 shadow-sm"
+              />
               <span className="font-display font-bold text-lg tracking-wider text-white uppercase">
                 Margal
               </span>
