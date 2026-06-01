@@ -1,4 +1,4 @@
-import React, { Children } from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -6,13 +6,11 @@ import {
   Users,
   ShieldCheck,
   Zap,
-  ArrowRight,
   ArrowDown,
   Facebook,
   Instagram,
-  MapPin,
-  Dribbble } from
-'lucide-react';
+  MapPin
+} from 'lucide-react';
 const fadeIn = {
   initial: {
     opacity: 0,
@@ -34,10 +32,64 @@ const staggerContainer = {
   }
 };
 export function Landing() {
+  const dayCardRef = useRef<HTMLDivElement>(null);
+  const nightCardRef = useRef<HTMLDivElement>(null);
+
+  const [dayVisible, setDayVisible] = React.useState(false);
+  const [nightVisible, setNightVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    let ticking = false;
+
+    const updateVisibility = () => {
+      const viewHeight = window.innerHeight;
+
+      if (dayCardRef.current) {
+        const rect = dayCardRef.current.getBoundingClientRect();
+        if (rect.top < viewHeight - 100) {
+          setDayVisible(true);
+        } else if (rect.top >= viewHeight) {
+          setDayVisible(false);
+        }
+      }
+
+      if (nightCardRef.current) {
+        const rect = nightCardRef.current.getBoundingClientRect();
+        if (rect.top < viewHeight - 100) {
+          setNightVisible(true);
+        } else if (rect.top >= viewHeight) {
+          setNightVisible(false);
+        }
+      }
+
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateVisibility);
+        ticking = true;
+      }
+    };
+
+    // Set initial visibility on mount
+    updateVisibility();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
+  const dayTransition = { type: 'spring', stiffness: 100, damping: 15 };
+  const nightTransition = { type: 'spring', stiffness: 100, damping: 15, delay: 0.2 };
+
   return (
     <div className="flex flex-col w-full">
       {/* Hero Section — Sleepless Grounds inspired */}
-      <section className="relative overflow-hidden min-h-[calc(100vh-5rem)] flex items-center bg-gradient-to-br from-pastel-blue-light/50 via-white to-pastel-blue/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 -mt-16 sm:-mt-20 pt-16 sm:pt-20">
+      <section className="relative overflow-hidden min-h-[calc(100vh-5rem)] flex items-center bg-gradient-to-br from-pastel-blue-light/50 via-white to-pastel-blue/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         {/* Radial gradient glows */}
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pastel-blue/40 dark:bg-pastel-blue-dark/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-pastel-blue-dark/25 dark:bg-pastel-blue/15 rounded-full blur-3xl pointer-events-none" />
@@ -50,22 +102,17 @@ export function Landing() {
             animate="animate"
             variants={staggerContainer}>
             
-            {/* Logo mark */}
-            <motion.div variants={fadeIn} className="flex justify-center mb-8">
-              <div className="p-4 bg-gradient-to-br from-pastel-blue to-pastel-blue-dark rounded-2xl text-white shadow-lg">
-                <Dribbble size={36} strokeWidth={2.5} />
-              </div>
-            </motion.div>
+
 
             {/* Headline */}
             <motion.h1
               variants={fadeIn}
-              className="font-display font-bold uppercase tracking-tighter leading-[0.85] text-slate-900 dark:text-white mb-6">
+              className="font-display font-bold uppercase tracking-tighter leading-[0.95] text-slate-900 dark:text-white mb-6">
               
               <span className="block text-[clamp(3rem,11vw,9rem)]">
                 Your Game
               </span>
-              <span className="block text-[clamp(3rem,11vw,9rem)] text-gradient">
+              <span className="block text-[clamp(3rem,11vw,9rem)] text-gradient pb-4">
                 Your Rules!
               </span>
             </motion.h1>
@@ -216,17 +263,10 @@ export function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Day Rate */}
             <motion.div
-              initial={{
-                opacity: 0,
-                x: -20
-              }}
-              whileInView={{
-                opacity: 1,
-                x: 0
-              }}
-              viewport={{
-                once: true
-              }}
+              ref={dayCardRef}
+              initial={{ opacity: 0, y: 50 }}
+              animate={dayVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+              transition={dayTransition}
               className="relative p-8 rounded-3xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
               
               <div className="absolute top-0 right-0 w-32 h-32 bg-pastel-blue/10 rounded-bl-full -mr-4 -mt-4"></div>
@@ -264,17 +304,10 @@ export function Landing() {
 
             {/* Night Rate */}
             <motion.div
-              initial={{
-                opacity: 0,
-                x: 20
-              }}
-              whileInView={{
-                opacity: 1,
-                x: 0
-              }}
-              viewport={{
-                once: true
-              }}
+              ref={nightCardRef}
+              initial={{ opacity: 0, y: 50 }}
+              animate={nightVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+              transition={nightTransition}
               className="relative p-8 rounded-3xl bg-slate-900 dark:bg-slate-950 text-white shadow-xl overflow-hidden">
               
               <div className="absolute top-0 right-0 w-32 h-32 bg-pastel-coral/20 rounded-bl-full -mr-4 -mt-4"></div>

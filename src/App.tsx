@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -8,6 +7,7 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Booking } from './pages/Booking';
 import { Events } from './pages/Events';
+import { Profile } from './pages/Profile';
 export function App() {
   return (
     <ThemeProvider>
@@ -20,6 +20,7 @@ export function App() {
             <Route path="signup" element={<Signup />} />
             <Route path="book" element={<Booking />} />
             <Route path="events" element={<Events />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -21,19 +21,19 @@ export default {
           },
           gold: {
             light: '#FDF1C4',
-            DEFAULT: '#F5DC85',
-            dark: '#D4B85E',
+            DEFAULT: '#D4AF37',
+            dark: '#C69214',
           }
         },
         brand: {
           navy: '#1A3673',
           red: '#C1272D',
-          gold: '#F1C40F'
+          gold: '#C69214'
         }
       },
       fontFamily: {
         display: ['Oswald', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        body: ['"Segoe UI"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-pastel': 'linear-gradient(135deg, var(--tw-gradient-stops))',
