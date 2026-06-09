@@ -28,6 +28,10 @@ const navLinks = [
   path: '/events'
 },
 {
+  name: 'My Profile',
+  path: '/profile'
+},
+{
   name: 'Log In',
   path: '/login'
 },

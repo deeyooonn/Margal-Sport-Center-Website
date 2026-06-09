@@ -3,15 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase, supabaseConfigured } from '../lib/supabase';
+
 export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // ─── Admin Demo Login ─────────────────────────────────────────────────────
   const handleAdminLogin = () => {
     setIsLoading(true);
+    toast.info('Demo admin mode — connect Supabase for real auth.');
     setTimeout(() => {
       setIsLoading(false);
-      
+      // Persist a demo admin profile in localStorage as fallback
       const adminProfile = {
         name: 'Margal Admin',
         email: 'admin@margalsports.com',
@@ -22,75 +26,50 @@ export function Login() {
         tier: 'Court Director',
         role: 'admin'
       };
-      
       localStorage.setItem('margal_user_profile', JSON.stringify(adminProfile));
       window.dispatchEvent(new Event('margal_profile_updated'));
-      toast.success('Logged in successfully as Administrator!');
+      toast.success('Logged in as Administrator (Demo Mode)!');
       navigate('/book');
-    }, 1000);
+    }, 900);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  // ─── Supabase Sign In ─────────────────────────────────────────────────────
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
+    if (!supabaseConfigured) {
+      toast.error('Supabase not connected yet. Use the Admin demo button, or add your .env.local credentials.');
+      setIsLoading(false);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const email = formData.get('email') as string;
-    
-    setTimeout(() => {
+    const password = formData.get('password') as string;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      toast.error(error.message || 'Login failed. Please check your credentials.');
       setIsLoading(false);
-      
-      if (email.toLowerCase().includes('admin')) {
-        const adminProfile = {
-          name: 'Margal Admin',
-          email: email,
-          phone: '0917-555-9999',
-          fbLink: 'facebook.com/margal.sports.admin',
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=256&auto=format&fit=crop',
-          createdDate: 'January 2022',
-          tier: 'Court Director',
-          role: 'admin'
-        };
-        localStorage.setItem('margal_user_profile', JSON.stringify(adminProfile));
-        window.dispatchEvent(new Event('margal_profile_updated'));
-        toast.success('Logged in successfully as Administrator!');
-      } else {
-        const stored = localStorage.getItem('margal_user_profile');
-        let normalProfile = stored ? JSON.parse(stored) : null;
-        if (!normalProfile || normalProfile.role === 'admin') {
-          normalProfile = {
-            name: 'Juan Dela Cruz',
-            email: email || 'juan.delacruz@example.com',
-            phone: '0917-555-0123',
-            fbLink: 'facebook.com/ka.margal.player',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop',
-            createdDate: 'April 2023',
-            tier: 'Ka-Margal Elite',
-            role: 'user'
-          };
-          localStorage.setItem('margal_user_profile', JSON.stringify(normalProfile));
-          window.dispatchEvent(new Event('margal_profile_updated'));
-        }
-        toast.success('Successfully logged in!');
-      }
-      navigate('/book');
-    }, 1000);
+      return;
+    }
+
+    toast.success('Logged in successfully!');
+    navigate('/book');
+    setIsLoading(false);
   };
+
   return (
     <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
       {/* Decorative blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pastel-blue/20 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-screen"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-pastel-blue-dark/20 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-screen"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pastel-blue/20 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-pastel-blue-dark/20 rounded-full blur-3xl mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
 
       <motion.div
-        initial={{
-          opacity: 0,
-          y: 20
-        }}
-        animate={{
-          opacity: 1,
-          y: 0
-        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full space-y-8 bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800 relative z-10">
         
         <div className="text-center">
@@ -109,11 +88,9 @@ export function Login() {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
+            {/* Email */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Email address
               </label>
               <div className="relative">
@@ -127,16 +104,14 @@ export function Login() {
                   autoComplete="email"
                   required
                   className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pastel-blue focus:border-transparent transition-shadow"
-                  placeholder="player@example.com" />
-                
+                  placeholder="player@example.com"
+                />
               </div>
             </div>
 
+            {/* Password */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -150,133 +125,95 @@ export function Login() {
                   autoComplete="current-password"
                   required
                   className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pastel-blue focus:border-transparent transition-shadow"
-                  placeholder="••••••••" />
-                
+                  placeholder="••••••••"
+                />
               </div>
             </div>
           </div>
 
+          {/* Remember + Forgot */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-pastel-blue focus:ring-pastel-blue border-slate-300 rounded cursor-pointer" />
-              
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
-                
+                className="h-4 w-4 text-pastel-blue focus:ring-pastel-blue border-slate-300 rounded cursor-pointer"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
                 Remember me
               </label>
             </div>
-
             <div className="text-sm">
-              <a
-                href="#"
-                className="font-medium text-pastel-blue hover:text-pastel-blue-dark dark:hover:text-pastel-blue-light transition-colors">
-                
+              <a href="#" className="font-medium text-pastel-blue hover:text-pastel-blue-dark dark:hover:text-pastel-blue-light transition-colors">
                 Forgot password?
               </a>
             </div>
           </div>
 
+          {/* Sign In Button */}
           <div>
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
-              
-              {isLoading ?
-              <span className="flex items-center gap-2">
-                  <svg
-                  className="animate-spin h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24">
-                  
-                    <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4">
-                  </circle>
-                    <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                  </path>
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                   Signing in...
-                </span> :
-
-              <span className="flex items-center gap-2">
-                  Sign in{' '}
-                  <ArrowRight
-                  size={16}
-                  className="group-hover:translate-x-1 transition-transform" />
-                
                 </span>
-              }
+              ) : (
+                <span className="flex items-center gap-2">
+                  Sign in <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
             </button>
           </div>
 
-          <div className="mt-4">
+          {/* Admin Demo */}
+          <div>
             <button
               type="button"
               onClick={handleAdminLogin}
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border-2 border-[#1A3673] hover:bg-[#1A3673] hover:text-white dark:border-[#C69214] dark:text-[#C69214] dark:hover:bg-[#C69214] dark:hover:text-slate-900 text-[#1A3673] font-bold text-sm rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center gap-2"
+              className="w-full flex justify-center items-center gap-2 py-3 px-4 border-2 border-[#1A3673] hover:bg-[#1A3673] hover:text-white dark:border-[#C69214] dark:text-[#C69214] dark:hover:bg-[#C69214] dark:hover:text-slate-900 text-[#1A3673] font-bold text-sm rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer shadow-sm"
             >
               <Shield size={16} /> Log In as Admin (Demo)
             </button>
           </div>
         </form>
 
+        {/* Divider */}
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-200 dark:border-slate-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-slate-900 text-slate-500">
-                Or continue with
-              </span>
+              <span className="px-2 bg-white dark:bg-slate-900 text-slate-500">Or continue with</span>
             </div>
           </div>
 
+          {/* Social login placeholders */}
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
-              className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-              
-              <svg
-                className="h-5 w-5"
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="currentColor">
-                
+              className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
               </svg>
             </button>
             <button
               type="button"
-              className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-              
-              <svg
-                className="h-5 w-5 text-[#1877F2]"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true">
-                
-                <path
-                  fillRule="evenodd"
-                  d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                  clipRule="evenodd" />
-                
+              className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <svg className="h-5 w-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
               </svg>
             </button>
           </div>
@@ -284,14 +221,11 @@ export function Login() {
 
         <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
           Don't have an account?{' '}
-          <Link
-            to="/signup"
-            className="font-semibold text-pastel-blue hover:text-pastel-blue-dark dark:hover:text-pastel-blue-light transition-colors">
-            
+          <Link to="/signup" className="font-semibold text-pastel-blue hover:text-pastel-blue-dark dark:hover:text-pastel-blue-light transition-colors">
             Sign up
           </Link>
         </p>
       </motion.div>
-    </div>);
-
+    </div>
+  );
 }

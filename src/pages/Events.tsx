@@ -223,6 +223,7 @@ export function Events() {
                       
                       <input
                         type="date"
+                        name="targetDate"
                         required
                         className="w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-pastel-blue focus:border-transparent" />
                       
@@ -239,6 +240,7 @@ export function Events() {
                       
                       <input
                         type="number"
+                        name="guestCount"
                         min="1"
                         placeholder="e.g. 50"
                         required
@@ -255,6 +257,7 @@ export function Events() {
                     </label>
                     <input
                       type="text"
+                      name="contactName"
                       required
                       placeholder="Juan Dela Cruz"
                       className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-pastel-blue focus:border-transparent" />
@@ -266,6 +269,7 @@ export function Events() {
                     </label>
                     <input
                       type="tel"
+                      name="contactPhone"
                       required
                       placeholder="0912 345 6789"
                       className="w-full px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-pastel-blue focus:border-transparent" />
@@ -284,6 +288,7 @@ export function Events() {
                     
                     <textarea
                       rows={4}
+                      name="additionalDetails"
                       placeholder="Tell us more about your event (e.g., need catering space, specific hours...)"
                       className="w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-pastel-blue focus:border-transparent resize-none">
                     </textarea>

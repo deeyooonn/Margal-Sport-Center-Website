@@ -1,5 +1,5 @@
 /* @import url() FONT IMPORTS MUST ALWAYS BE AT THE VERY TOP OF THIS FILE, ABOVE THE TAILWIND IMPORTS — DO NOT DELETE THIS COMMENT */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=Oswald:wght@400;500;600;700&display=swap');
 
 /* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
 @import 'tailwindcss/base';
@@ -17,19 +17,60 @@
   }
   body {
     @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 transition-colors duration-300;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-wide;
   }
 }
+
 @layer utilities {
+  /* Gradient text — overflow visible so descenders & ascenders aren't clipped */
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-pastel-blue-dark to-pastel-blue dark:from-pastel-blue-light dark:to-pastel-blue;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
   }
   .bg-gradient-primary {
     @apply bg-gradient-to-br from-pastel-blue-light/30 to-pastel-blue/30 dark:from-pastel-blue-dark/20 dark:to-pastel-blue/10;
   }
   .bg-gradient-card {
     @apply bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800;
+  }
+
+  /* Custom scrollbar — used on Booking and Profile panels */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.slate.300') transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: theme('colors.slate.300');
+    border-radius: 9999px;
+  }
+  .dark .custom-scrollbar {
+    scrollbar-color: theme('colors.slate.700') transparent;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: theme('colors.slate.700');
+  }
+
+  /* Subtle card hover glow for feature cards */
+  .card-hover-glow {
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  .card-hover-glow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px -8px rgba(139, 166, 214, 0.35);
+  }
+  .dark .card-hover-glow:hover {
+    box-shadow: 0 12px 40px -8px rgba(90, 123, 181, 0.25);
   }
 }

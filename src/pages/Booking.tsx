@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
@@ -19,6 +19,8 @@ import {
   FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
+import { useBookings } from '../hooks/useBookings';
 
 // Types
 type SlotStatus = 'available' | 'booked' | 'selected';
@@ -55,8 +57,13 @@ export function Booking() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
 
-  // Auto-detect role from localStorage user profile
+  // Supabase auth — isAdmin comes from the real profile role
+  const { user, isAdmin: supabaseIsAdmin } = useAuth();
+  const { createBooking } = useBookings();
+
+  // Also check localStorage for demo/admin mode fallback
   const [isAdmin] = useState<boolean>(() => {
+    // First try Supabase (will re-render once auth loads)
     try {
       const stored = localStorage.getItem('margal_user_profile');
       if (stored) {
@@ -68,6 +75,9 @@ export function Booking() {
     }
     return false;
   });
+
+  // Effective admin: Supabase role OR localStorage demo role
+  const effectiveIsAdmin = supabaseIsAdmin || isAdmin;
 
   // Global Bookings Database State
   const [bookings, setBookings] = useState<Record<string, TimeSlot[]>>({});
@@ -93,6 +103,19 @@ export function Booking() {
     }
     return [];
   });
+
+  // Sync confirmedBookings to localStorage on every change
+  useEffect(() => {
+    try {
+      const serialized = confirmedBookings.map(b => ({
+        ...b,
+        date: b.date.toISOString()
+      }));
+      localStorage.setItem('margal_confirmed_bookings', JSON.stringify(serialized));
+    } catch (e) {
+      console.error('Error auto-syncing bookings to localStorage', e);
+    }
+  }, [confirmedBookings]);
 
   // UI Selection State
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
@@ -204,7 +227,7 @@ export function Booking() {
     if (!slot) return;
 
     // Handle Admin override: open modification modal directly!
-    if (isAdmin) {
+    if (effectiveIsAdmin) {
       setModifyingSlot(slot);
       setEditCustomerName(slot.customerName || '');
       setEditCustomerPhone(slot.customerPhone || '');
@@ -284,28 +307,61 @@ export function Booking() {
     toast.success('Slot unlocked and returned to Available!');
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsConfirming(true);
-    setTimeout(() => {
-      setIsConfirming(false);
-      
-      // Update global database to set slots as booked for the customer
-      if (selectedDate) {
-        const dateKey = getDateKey(selectedDate);
-        const updatedSlots = bookings[dateKey].map((s) => {
-          if (selectedSlotIds.includes(s.id)) {
-            return {
-              ...s,
-              status: 'booked' as SlotStatus,
-              customerName: 'Online Customer',
-              customerPhone: 'N/A',
-              notes: 'Booked via Web Portal',
-            };
-          }
-          return s;
-        });
-        setBookings(prev => ({ ...prev, [dateKey]: updatedSlots }));
 
+    if (selectedDate) {
+      const dateKey = getDateKey(selectedDate);
+      const yyyy = selectedDate.getFullYear();
+      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(selectedDate.getDate()).padStart(2, '0');
+      const bookingDateStr = `${yyyy}-${mm}-${dd}`;
+
+      // Update local slot grid state
+      const updatedSlots = bookings[dateKey].map((s) => {
+        if (selectedSlotIds.includes(s.id)) {
+          return {
+            ...s,
+            status: 'booked' as SlotStatus,
+            customerName: 'Online Customer',
+            customerPhone: 'N/A',
+            notes: 'Booked via Web Portal',
+          };
+        }
+        return s;
+      });
+      setBookings(prev => ({ ...prev, [dateKey]: updatedSlots }));
+
+      const slotPayload = selectedSlotsData.map(s => ({
+        id: s.id,
+        timeLabel: s.timeLabel,
+        hour: s.hour,
+        rate: s.rate,
+      }));
+
+      if (user) {
+        // ── Supabase save ──────────────────────────────────────────────────
+        const result = await createBooking({
+          booking_date: bookingDateStr,
+          time_slots: slotPayload,
+          total_amount: totalAmount,
+          customer_name: 'Online Customer',
+          customer_phone: 'N/A',
+          notes: 'Booked via Web Portal',
+        });
+
+        if (result) {
+          // Append to local confirmed panel
+          setConfirmedBookings(prev => [
+            { id: result.id, date: selectedDate, slots: selectedSlotsData, total: totalAmount } as any,
+            ...prev
+          ]);
+          toast.success('Booking Confirmed! See you on the court. 🏀');
+        } else {
+          toast.error('Booking failed. Please try again.');
+        }
+      } else {
+        // ── localStorage fallback (demo/admin mode) ────────────────────────
         const newBooking = {
           id: `booking-${Date.now()}`,
           date: selectedDate.toISOString(),
@@ -313,16 +369,11 @@ export function Booking() {
           total: totalAmount
         };
 
-        // Append to confirmed bookings panel
         setConfirmedBookings(prev => [
-          {
-            ...newBooking,
-            date: selectedDate
-          } as any,
+          { ...newBooking, date: selectedDate } as any,
           ...prev
         ]);
 
-        // Persist to localStorage
         try {
           const stored = localStorage.getItem('margal_confirmed_bookings');
           const existing = stored ? JSON.parse(stored) : [];
@@ -330,11 +381,12 @@ export function Booking() {
         } catch (e) {
           console.error('Error saving confirmed booking to localStorage', e);
         }
+        toast.success('Booking Confirmed! See you on the court. 🏀');
       }
+    }
 
-      toast.success('Booking Confirmed! See you on the court.');
-      setSelectedSlotIds([]);
-    }, 1500);
+    setIsConfirming(false);
+    setSelectedSlotIds([]);
   };
 
   return (
@@ -348,7 +400,7 @@ export function Booking() {
               <h1 className="text-4xl font-display font-bold uppercase tracking-wide text-slate-900 dark:text-white">
                 Book a Court
               </h1>
-              {isAdmin && (
+              {effectiveIsAdmin && (
                 <span className="px-3 py-1 bg-pastel-blue/15 text-pastel-blue-dark dark:text-pastel-blue-light text-[10px] font-bold uppercase tracking-widest rounded-full border border-pastel-blue/30 flex items-center gap-1">
                   <Shield size={12} className="text-pastel-blue animate-pulse" />
                   Admin Override Active
@@ -485,7 +537,7 @@ export function Booking() {
                     </div>
                   </div>
 
-                  {isAdmin && (
+                  {effectiveIsAdmin && (
                     <div className="mb-4 bg-pastel-blue/10 text-pastel-blue-dark dark:text-pastel-blue-light text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2 border border-pastel-blue/20">
                       <Shield size={16} />
                       <span>Admin Mode overrides active: click any Booked slot to Modify, Unlock, or Edit Customer details.</span>
@@ -501,12 +553,12 @@ export function Booking() {
                       return (
                         <button
                           key={slot.id}
-                          disabled={isBooked && !isAdmin}
+                          disabled={isBooked && !effectiveIsAdmin}
                           onClick={() => handleSlotClick(slot.id)}
                           className={`
                             relative flex items-center justify-between p-4 rounded-xl border text-left transition-all group/btn
                             ${isBooked
-                              ? isAdmin
+                              ? effectiveIsAdmin
                                 ? 'bg-slate-100 border-pastel-blue-light/50 dark:bg-slate-800/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer hover:border-pastel-blue shadow-sm'
                                 : 'bg-slate-50 border-slate-100 text-slate-400 dark:bg-slate-900/50 dark:border-slate-800/50 dark:text-slate-600 cursor-not-allowed'
                               : isSelected
@@ -535,7 +587,7 @@ export function Booking() {
                             </div>
 
                             {/* Booked Circle Dot Indicator */}
-                            {isBooked && !isAdmin && (
+                            {isBooked && !effectiveIsAdmin && (
                               <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center shrink-0">
                                 <div className="w-2 h-2 rounded-full bg-pastel-blue"></div>
                               </div>
@@ -549,7 +601,7 @@ export function Booking() {
                             )}
 
                             {/* Admin Modification Quick-Icon */}
-                            {isBooked && isAdmin && (
+                            {isBooked && effectiveIsAdmin && (
                               <div className="w-7 h-7 rounded-xl bg-pastel-blue/20 text-pastel-blue flex items-center justify-center shrink-0 group-hover/btn:scale-105 transition-transform">
                                 <Edit3 size={14} />
                               </div>
@@ -903,6 +955,32 @@ export function Booking() {
         )}
       </AnimatePresence>
 
+      {/* Mobile Sticky Booking Bar — visible only when slots selected on small screens */}
+      {selectedSlotIds.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 py-3 shadow-2xl flex items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              {selectedSlotIds.length} slot{selectedSlotIds.length > 1 ? 's' : ''} selected
+            </div>
+            <div className="text-xl font-display font-bold text-slate-900 dark:text-white">
+              ₱{totalAmount}
+            </div>
+          </div>
+          <button
+            onClick={handleConfirm}
+            disabled={isConfirming}
+            className="flex-shrink-0 py-3 px-6 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold uppercase tracking-wider hover:bg-slate-800 dark:hover:bg-slate-100 transition-all shadow-md disabled:opacity-70 flex items-center gap-2 cursor-pointer text-sm"
+          >
+            {isConfirming ? (
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            ) : null}
+            {isConfirming ? 'Confirming...' : 'Confirm'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

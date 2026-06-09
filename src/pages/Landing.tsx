@@ -9,7 +9,8 @@ import {
   ArrowDown,
   Facebook,
   Instagram,
-  MapPin
+  MapPin,
+  Clock
 } from 'lucide-react';
 const fadeIn = {
   initial: {
@@ -112,8 +113,10 @@ export function Landing() {
               <span className="block text-[clamp(3rem,11vw,9rem)]">
                 Your Game
               </span>
-              <span className="block text-[clamp(3rem,11vw,9rem)] text-gradient pb-4">
-                Your Rules!
+              <span className="block text-[clamp(3rem,11vw,9rem)] pb-4 overflow-visible">
+                <span className="text-gradient">
+                  Your Rules!
+                </span>
               </span>
             </motion.h1>
 
@@ -229,7 +232,7 @@ export function Landing() {
               transition={{
                 delay: idx * 0.1
               }}
-              className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+              className="card-hover-glow p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 cursor-default">
               
                 <div
                 className={`w-12 h-12 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center mb-4 ${feature.color}`}>
@@ -366,24 +369,5 @@ export function Landing() {
         </div>
       </section>
     </div>);
-
-}
-function Clock(props: any) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}>
-      
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>);
 
 }

@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, Menu } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { MenuOverlay } from './MenuOverlay';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  const isOnProfile = location.pathname === '/profile';
+  const { profile: supabaseProfile } = useAuth();
 
-  const [profile, setProfile] = useState<{ name: string; avatar: string }>(() => {
+  const [localProfile, setLocalProfile] = useState<{ name: string; avatar: string }>(() => {
     try {
       const stored = localStorage.getItem('margal_user_profile');
       if (stored) {
@@ -27,13 +31,18 @@ export function Header() {
     };
   });
 
+  // Effective profile: prefer Supabase, fall back to localStorage
+  const profile = supabaseProfile
+    ? { name: supabaseProfile.name, avatar: supabaseProfile.avatar_url }
+    : localProfile;
+
   useEffect(() => {
     const handleStorageChange = () => {
       try {
         const stored = localStorage.getItem('margal_user_profile');
         if (stored) {
           const parsed = JSON.parse(stored);
-          setProfile({
+          setLocalProfile({
             name: parsed.name || 'Ka-Margal',
             avatar: parsed.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop'
           });
@@ -95,7 +104,7 @@ export function Header() {
                 aria-label="Toggle theme">
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              <Link to="/profile" className="flex items-center gap-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-1 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer select-none">
+              <Link to="/profile" className={`flex items-center gap-2 border bg-slate-50 dark:bg-slate-900/50 p-1 pr-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer select-none ${isOnProfile ? 'border-pastel-blue dark:border-pastel-blue shadow-sm ring-2 ring-pastel-blue/20' : 'border-slate-200 dark:border-slate-800'}`}>
                 <img
                   src={profile.avatar}
                   alt="User Profile"
