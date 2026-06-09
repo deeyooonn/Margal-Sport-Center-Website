@@ -9,12 +9,14 @@ import { Signup } from './pages/Signup';
 import { Booking } from './pages/Booking';
 import { Events } from './pages/Events';
 import { Profile } from './pages/Profile';
+import { ScrollToTop } from './components/ScrollToTop';
 
 export function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Toaster position="top-center" richColors />
           <Routes>
             <Route path="/" element={<Layout />}>
