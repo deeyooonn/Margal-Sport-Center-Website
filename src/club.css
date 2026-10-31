@@ -114,3 +114,4 @@
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+.club-demo-notice { margin: 0; padding: 10px 20px; text-align: center; background: #eaf0f5; color: #33485d; font: 12px/1.6 Inter, system-ui, sans-serif; }
