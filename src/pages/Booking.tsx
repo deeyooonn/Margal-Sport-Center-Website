@@ -419,7 +419,7 @@ export function Booking() {
           <div className="lg:col-span-2 space-y-8">
             
             {/* Calendar Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+            <div className="booking-calendar bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-display font-semibold flex items-center gap-2">
                   <CalendarIcon className="text-pastel-blue" />
@@ -428,12 +428,14 @@ export function Booking() {
                 <div className="flex gap-2">
                   <button
                     onClick={handlePrevMonth}
+                    aria-label="Previous month"
                     className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <ChevronLeft size={20} />
                   </button>
                   <button
                     onClick={handleNextMonth}
+                    aria-label="Next month"
                     className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <ChevronRight size={20} />
@@ -478,6 +480,8 @@ export function Booking() {
                   return (
                     <button
                       key={dateVal}
+                      aria-label={targetDate.toLocaleDateString('en-PH', { dateStyle: 'full' })}
+                      aria-pressed={isSelected}
                       disabled={isPast}
                       onClick={() => setSelectedDate(targetDate)}
                       className={`

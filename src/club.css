@@ -115,3 +115,5 @@
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 .club-demo-notice { margin: 0; padding: 10px 20px; text-align: center; background: #eaf0f5; color: #33485d; font: 12px/1.6 Inter, system-ui, sans-serif; }
+
+@media(pointer:coarse){:is(input,select,textarea){font-size:16px!important}.booking-calendar button{min-height:44px}.booking-calendar>div:first-child button{min-width:44px}.booking-calendar .grid-cols-7{gap:4px}.booking-calendar .grid-cols-7 button{aspect-ratio:auto;min-width:0;height:48px}.booking-calendar{padding:16px!important}.club-menu{max-height:calc(100dvh - 24px)}.club-footer{padding-bottom:env(safe-area-inset-bottom)}}
