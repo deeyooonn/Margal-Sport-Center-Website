@@ -10,6 +10,7 @@ import { Booking } from './pages/Booking';
 import { Events } from './pages/Events';
 import { Profile } from './pages/Profile';
 import { ScrollToTop } from './components/ScrollToTop';
+import './club.css';
 
 export function App() {
   return (

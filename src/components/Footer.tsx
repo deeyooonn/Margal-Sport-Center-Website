@@ -1,134 +1,17 @@
 import { Link } from 'react-router-dom';
-import {
-  MapPin,
-  Phone,
-  Clock,
-  Facebook,
-  Instagram } from
-'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+
 export function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-300 py-12 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <img 
-                src="/margal-logo.jpg" 
-                alt="Margal Logo" 
-                className="w-10 h-10 object-contain rounded-full border border-slate-700 shadow-sm"
-              />
-              <span className="font-display font-bold text-lg tracking-wider text-white uppercase">
-                Margal
-              </span>
-            </Link>
-            <p className="text-sm text-slate-400 mb-4">
-              Your Game, Your Rules! No waiting. No strangers. Just pure game
-              time.
-            </p>
-            <div className="flex gap-4">
-              <a
-                href="#"
-                className="text-slate-400 hover:text-pastel-blue transition-colors">
-                
-                <Facebook size={20} />
-              </a>
-              <a
-                href="#"
-                className="text-slate-400 hover:text-pastel-coral transition-colors">
-                
-                <Instagram size={20} />
-              </a>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-display font-semibold text-white tracking-wide mb-4 uppercase">
-              Quick Links
-            </h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/book" className="hover:text-white transition-colors">
-                  Book a Court
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/events"
-                  className="hover:text-white transition-colors">
-                  
-                  Event Rentals
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/profile"
-                  className="hover:text-white transition-colors">
-                  
-                  My Profile
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/login"
-                  className="hover:text-white transition-colors">
-                  
-                  Log In
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/signup"
-                  className="hover:text-white transition-colors">
-                  
-                  Sign Up
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div className="col-span-1 md:col-span-2">
-            <h3 className="font-display font-semibold text-white tracking-wide mb-4 uppercase">
-              Visit Us
-            </h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-3">
-                <MapPin
-                  size={18}
-                  className="text-pastel-coral shrink-0 mt-0.5" />
-                
-                <span>Brgy. Cambaog, Bustos, Bulacan, Philippines</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="text-pastel-blue shrink-0" />
-                <span>0921 663 8243</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Clock size={18} className="text-pastel-gold shrink-0" />
-                <span>Open Daily: 8:00 AM - 12:00 MN</span>
-              </li>
-            </ul>
-          </div>
+    <footer className="club-footer">
+      <div className="club-container">
+        <div className="club-footer-main">
+          <div><Link to="/" className="club-brand"><img src="/margal-logo.jpg" alt="" width="44" height="44" /><span>Margal<small>Sports Center</small></span></Link><p>See you on the court, Ka-Margal.</p></div>
+          <div><h2>Come by</h2><p>Brgy. Cambaog, Bustos,<br />Bulacan, Philippines</p><a href="https://www.google.com/maps/search/?api=1&query=Margal+Sports+Center+Cambaog+Bustos+Bulacan" target="_blank" rel="noopener noreferrer">Find us on Maps <ArrowUpRight size={15} /></a></div>
+          <div><h2>Get in touch</h2><a href="tel:+639216638243">0921 663 8243</a><p>Open daily<br />8 AM–midnight</p></div>
         </div>
-
-        <div className="mt-12 pt-8 border-t border-slate-800 text-sm text-center text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>
-            &copy; {new Date().getFullYear()} Margal Sports Center. All rights
-            reserved.
-          </p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-white transition-colors">
-              Terms of Service
-            </a>
-          </div>
-        </div>
+        <div className="club-footer-bottom"><span>© {new Date().getFullYear()} Margal Sports Center</span><nav aria-label="Footer navigation"><Link to="/book">Book a court</Link><Link to="/events">Event rentals</Link><Link to="/profile">My profile</Link></nav></div>
       </div>
-    </footer>);
-
+    </footer>
+  );
 }

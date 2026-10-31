@@ -1,373 +1,44 @@
-import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  CalendarCheck,
-  Users,
-  ShieldCheck,
-  Zap,
-  ArrowDown,
-  Facebook,
-  Instagram,
-  MapPin,
-  Clock
-} from 'lucide-react';
-const fadeIn = {
-  initial: {
-    opacity: 0,
-    y: 20
-  },
-  animate: {
-    opacity: 1,
-    y: 0
-  },
-  transition: {
-    duration: 0.5
-  }
-};
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
+import { ArrowRight, ArrowUpRight, Clock, MapPin } from 'lucide-react';
+
 export function Landing() {
-  const dayCardRef = useRef<HTMLDivElement>(null);
-  const nightCardRef = useRef<HTMLDivElement>(null);
-
-  const [dayVisible, setDayVisible] = React.useState(false);
-  const [nightVisible, setNightVisible] = React.useState(false);
-
-  React.useEffect(() => {
-    let ticking = false;
-
-    const updateVisibility = () => {
-      const viewHeight = window.innerHeight;
-
-      if (dayCardRef.current) {
-        const rect = dayCardRef.current.getBoundingClientRect();
-        if (rect.top < viewHeight - 100) {
-          setDayVisible(true);
-        } else if (rect.top >= viewHeight) {
-          setDayVisible(false);
-        }
-      }
-
-      if (nightCardRef.current) {
-        const rect = nightCardRef.current.getBoundingClientRect();
-        if (rect.top < viewHeight - 100) {
-          setNightVisible(true);
-        } else if (rect.top >= viewHeight) {
-          setNightVisible(false);
-        }
-      }
-
-      ticking = false;
-    };
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateVisibility);
-        ticking = true;
-      }
-    };
-
-    // Set initial visibility on mount
-    updateVisibility();
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, []);
-
-  const dayTransition = { type: 'spring', stiffness: 100, damping: 15 };
-  const nightTransition = { type: 'spring', stiffness: 100, damping: 15, delay: 0.2 };
-
   return (
-    <div className="flex flex-col w-full">
-      {/* Hero Section — Sleepless Grounds inspired */}
-      <section className="relative overflow-hidden min-h-[calc(100vh-5rem)] flex items-center bg-gradient-to-br from-pastel-blue-light/50 via-white to-pastel-blue/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        {/* Radial gradient glows */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-pastel-blue/40 dark:bg-pastel-blue-dark/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-pastel-blue-dark/25 dark:bg-pastel-blue/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop')] bg-cover bg-center opacity-[0.04] dark:opacity-[0.08] mix-blend-overlay pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-16">
-          <motion.div
-            className="text-center max-w-5xl mx-auto"
-            initial="initial"
-            animate="animate"
-            variants={staggerContainer}>
-            
-
-
-            {/* Headline */}
-            <motion.h1
-              variants={fadeIn}
-              className="font-display font-bold uppercase tracking-tighter leading-[0.95] text-slate-900 dark:text-white mb-6">
-              
-              <span className="block text-[clamp(3rem,11vw,9rem)]">
-                Your Game
-              </span>
-              <span className="block text-[clamp(3rem,11vw,9rem)] pb-4 overflow-visible">
-                <span className="text-gradient">
-                  Your Rules!
-                </span>
-              </span>
-            </motion.h1>
-
-            {/* Tagline */}
-            <motion.p
-              variants={fadeIn}
-              className="text-pastel-gold-dark dark:text-pastel-gold-light text-sm sm:text-base font-display font-semibold uppercase tracking-[0.25em] mb-4">
-              
-              Est. 2022 &nbsp;//&nbsp; Bustos, Bulacan
-            </motion.p>
-
-            <motion.p
-              variants={fadeIn}
-              className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto mb-10">
-              
-              No waiting. No strangers. Just pure game time.
-            </motion.p>
-
-            {/* Quick links */}
-            <motion.div
-              variants={fadeIn}
-              className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mb-12 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-              
-              <a
-                href="#"
-                className="inline-flex items-center gap-1.5 hover:text-pastel-coral dark:hover:text-pastel-coral-light transition-colors">
-                
-                <Facebook size={14} /> Facebook
-              </a>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <a
-                href="#"
-                className="inline-flex items-center gap-1.5 hover:text-pastel-coral dark:hover:text-pastel-coral-light transition-colors">
-                
-                <Instagram size={14} /> Instagram
-              </a>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <a
-                href="#"
-                className="inline-flex items-center gap-1.5 hover:text-pastel-coral dark:hover:text-pastel-coral-light transition-colors">
-                
-                <MapPin size={14} /> Directions
-              </a>
-            </motion.div>
-
-            {/* CTAs */}
-            <motion.div
-              variants={fadeIn}
-              className="flex flex-col sm:flex-row justify-center gap-4">
-              
-              <Link
-                to="/book"
-                className="group inline-flex justify-center items-center gap-3 px-8 py-4 border-2 border-pastel-gold-dark dark:border-pastel-gold-light text-pastel-gold-dark dark:text-pastel-gold-light font-display font-bold uppercase tracking-[0.2em] text-sm hover:bg-pastel-gold-dark hover:text-white dark:hover:bg-pastel-gold-light dark:hover:text-slate-900 transition-all">
-                
-                Book Court
-                <ArrowDown
-                  size={16}
-                  className="group-hover:translate-y-1 transition-transform" />
-                
-              </Link>
-              <Link
-                to="/events"
-                className="group inline-flex justify-center items-center gap-3 px-8 py-4 border-2 border-slate-900 dark:border-white text-slate-900 dark:text-white font-display font-bold uppercase tracking-[0.2em] text-sm hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all">
-                
-                Events
-                <ArrowDown
-                  size={16}
-                  className="group-hover:translate-y-1 transition-transform" />
-                
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Value Props */}
-      <section className="py-20 bg-white dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-            {
-              icon: CalendarCheck,
-              title: 'Instant Booking',
-              desc: 'Reserve your slot online in seconds. No more walk-in disappointments.',
-              color: 'text-pastel-blue'
-            },
-            {
-              icon: ShieldCheck,
-              title: 'Exclusive Access',
-              desc: 'The whole court is yours. Private, safe, and uninterrupted gameplay.',
-              color: 'text-pastel-coral'
-            },
-            {
-              icon: Users,
-              title: 'Community Ready',
-              desc: 'Perfect for barkada games, leagues, and corporate sports fests.',
-              color: 'text-pastel-gold'
-            }].
-            map((feature, idx) =>
-            <motion.div
-              key={idx}
-              initial={{
-                opacity: 0,
-                y: 20
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0
-              }}
-              viewport={{
-                once: true
-              }}
-              transition={{
-                delay: idx * 0.1
-              }}
-              className="card-hover-glow p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 cursor-default">
-              
-                <div
-                className={`w-12 h-12 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center mb-4 ${feature.color}`}>
-                
-                  <feature.icon size={24} />
-                </div>
-                <h3 className="text-xl font-display font-semibold mb-2 uppercase tracking-wide">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {feature.desc}
-                </p>
-              </motion.div>
-            )}
+    <div className="club-home">
+      <section className="club-container club-hero" aria-labelledby="home-title">
+        <div className="club-hero-copy">
+          <p className="club-eyebrow"><span /> Your neighborhood court · Since 2022</p>
+          <h1 id="home-title">Your game.<br /><span>Your rules.</span></h1>
+          <p className="club-intro">Bring your people. Make time to play. Book a private court session at Margal Sports Center in Bustos, Bulacan.</p>
+          <div className="club-hero-actions">
+            <Link to="/book" className="club-button">Book a court <ArrowUpRight size={19} /></Link>
+            <a href="#court-rates" className="club-text-link">View court rates <ArrowRight size={17} /></a>
           </div>
+          <div className="club-hero-location"><MapPin size={16} /><span>Brgy. Cambaog, Bustos, Bulacan</span></div>
+        </div>
+        <div className="club-court-panel">
+          <div className="club-court-caption"><span>Margal Sports Center</span><span>Bustos, Bulacan</span></div>
+          <svg className="club-court" viewBox="0 0 460 330" fill="none" aria-hidden="true">
+            <rect x="26" y="24" width="408" height="282" rx="2" />
+            <path d="M230 24v282" /><circle cx="230" cy="165" r="44" /><circle cx="230" cy="165" r="5" />
+            <path d="M26 103h77v124H26M434 103h-77v124h77" />
+            <path d="M103 121a44 44 0 0 1 0 88M357 121a44 44 0 0 0 0 88" />
+            <path d="M26 54h30a111 111 0 0 1 0 222H26M434 54h-30a111 111 0 0 0 0 222h30" />
+            <path d="M44 146v38m372-38v38" /><circle cx="52" cy="165" r="8" /><circle cx="408" cy="165" r="8" />
+          </svg>
+          <div className="club-court-bottom"><span>A little less scrolling.<br /><strong>A little more game time.</strong></span><span className="club-court-number" aria-hidden="true">01</span></div>
         </div>
       </section>
-
-      {/* Rates Preview */}
-      <section className="py-24 bg-slate-50 dark:bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-bold uppercase tracking-wide mb-4">
-              Court Rates
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400">
-              Simple, transparent pricing for your next game.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Day Rate */}
-            <motion.div
-              ref={dayCardRef}
-              initial={{ opacity: 0, y: 50 }}
-              animate={dayVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={dayTransition}
-              className="relative p-8 rounded-3xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-              
-              <div className="absolute top-0 right-0 w-32 h-32 bg-pastel-blue/10 rounded-bl-full -mr-4 -mt-4"></div>
-              <h3 className="text-2xl font-display font-semibold uppercase mb-2">
-                Day Rate
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
-                <Clock size={16} /> 8:00 AM - 6:00 PM
-              </p>
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className="text-5xl font-display font-bold text-slate-900 dark:text-white">
-                  ₱300
-                </span>
-                <span className="text-slate-500 dark:text-slate-400">
-                  / hour
-                </span>
-              </div>
-              <ul className="space-y-3 mb-8 text-slate-600 dark:text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Zap size={16} className="text-pastel-gold" /> Natural
-                  lighting
-                </li>
-                <li className="flex items-center gap-2">
-                  <Zap size={16} className="text-pastel-gold" /> Free scoreboard
-                  use
-                </li>
-              </ul>
-              <Link
-                to="/book"
-                className="block w-full py-3 px-4 bg-slate-100 dark:bg-slate-700 text-center rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                
-                Book Day Slot
-              </Link>
-            </motion.div>
-
-            {/* Night Rate */}
-            <motion.div
-              ref={nightCardRef}
-              initial={{ opacity: 0, y: 50 }}
-              animate={nightVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={nightTransition}
-              className="relative p-8 rounded-3xl bg-slate-900 dark:bg-slate-950 text-white shadow-xl overflow-hidden">
-              
-              <div className="absolute top-0 right-0 w-32 h-32 bg-pastel-coral/20 rounded-bl-full -mr-4 -mt-4"></div>
-              <div className="absolute top-4 right-4 px-3 py-1 bg-pastel-coral text-white text-xs font-bold uppercase tracking-wider rounded-full">
-                Prime Time
-              </div>
-              <h3 className="text-2xl font-display font-semibold uppercase mb-2">
-                Night Rate
-              </h3>
-              <p className="text-slate-400 mb-6 flex items-center gap-2">
-                <Clock size={16} /> 6:00 PM - 12:00 MN
-              </p>
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className="text-5xl font-display font-bold">₱400</span>
-                <span className="text-slate-400">/ hour</span>
-              </div>
-              <ul className="space-y-3 mb-8 text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Zap size={16} className="text-pastel-coral" /> Full court
-                  lighting
-                </li>
-                <li className="flex items-center gap-2">
-                  <Zap size={16} className="text-pastel-coral" /> Cooler evening
-                  temp
-                </li>
-              </ul>
-              <Link
-                to="/book"
-                className="block w-full py-3 px-4 bg-pastel-coral hover:bg-pastel-coral-dark text-white text-center rounded-xl font-semibold transition-colors">
-                
-                Book Night Slot
-              </Link>
-            </motion.div>
-          </div>
+      <section id="court-rates" className="club-rates" aria-labelledby="rates-title">
+        <div className="club-container club-rate-grid">
+          <div className="club-rate-heading"><p className="club-eyebrow">Plan your session</p><h2 id="rates-title">One court. Your time.</h2><p><Clock size={16} /> Open daily, 8 AM–midnight</p></div>
+          <Link to="/book" className="club-rate-option"><div><span className="club-rate-name">Day session</span><ArrowUpRight size={20} /></div><p className="club-rate-price">₱300 <span>/ hour</span></p><p className="club-rate-hours">8 AM – 6 PM</p><span className="club-rate-action">Find a daytime slot <ArrowRight size={16} /></span></Link>
+          <Link to="/book" className="club-rate-option"><div><span className="club-rate-name">Evening session</span><ArrowUpRight size={20} /></div><p className="club-rate-price">₱400 <span>/ hour</span></p><p className="club-rate-hours">6 PM – midnight</p><span className="club-rate-action">Find an evening slot <ArrowRight size={16} /></span></Link>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-pastel-blue to-pastel-blue-dark opacity-90 dark:opacity-80"></div>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519861531473-9200262188bf?q=80&w=2071&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-20"></div>
-        <div className="max-w-4xl mx-auto px-4 relative z-10 text-center text-white">
-          <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-wide mb-6">
-            Ready to play, Ka-Margal?
-          </h2>
-          <p className="text-lg md:text-xl mb-10 text-white/90">
-            Secure your court time now and experience the best hardwood in
-            Bustos.
-          </p>
-          <Link
-            to="/book"
-            className="inline-flex justify-center items-center px-8 py-4 rounded-full bg-white text-slate-900 font-bold text-lg hover:scale-105 transition-transform shadow-xl">
-            
-            See Available Slots
-          </Link>
-        </div>
+      <section className="club-container club-events" aria-labelledby="events-title">
+        <div><p className="club-eyebrow">More room to get together</p><h2 id="events-title">Planning something bigger?</h2><p>Explore venue rentals for your next gathering or sports event.</p></div>
+        <Link to="/events" className="club-button club-button-outline">Explore event rentals <ArrowUpRight size={19} /></Link>
       </section>
-    </div>);
-
+    </div>
+  );
 }
