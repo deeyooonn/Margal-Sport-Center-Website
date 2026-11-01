@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Shield } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase, supabaseConfigured } from '../lib/supabase';
 
@@ -9,37 +9,13 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // ─── Admin Demo Login ─────────────────────────────────────────────────────
-  const handleAdminLogin = () => {
-    setIsLoading(true);
-    toast.info('Demo admin mode — connect Supabase for real auth.');
-    setTimeout(() => {
-      setIsLoading(false);
-      // Persist a demo admin profile in localStorage as fallback
-      const adminProfile = {
-        name: 'Margal Admin',
-        email: 'admin@margalsports.com',
-        phone: '0917-555-9999',
-        fbLink: 'facebook.com/margal.sports.admin',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=256&auto=format&fit=crop',
-        createdDate: 'January 2022',
-        tier: 'Court Director',
-        role: 'admin'
-      };
-      localStorage.setItem('margal_user_profile', JSON.stringify(adminProfile));
-      window.dispatchEvent(new Event('margal_profile_updated'));
-      toast.success('Logged in as Administrator (Demo Mode)!');
-      navigate('/book');
-    }, 900);
-  };
-
   // ─── Supabase Sign In ─────────────────────────────────────────────────────
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     if (!supabaseConfigured) {
-      toast.error('Supabase not connected yet. Use the Admin demo button, or add your .env.local credentials.');
+      toast.error('Sign-in is currently unavailable. Please contact the venue to reserve a court.');
       setIsLoading(false);
       return;
     }
@@ -174,50 +150,7 @@ export function Login() {
             </button>
           </div>
 
-          {/* Admin Demo */}
-          <div>
-            <button
-              type="button"
-              onClick={handleAdminLogin}
-              disabled={isLoading}
-              className="w-full flex justify-center items-center gap-2 py-3 px-4 border-2 border-[#1A3673] hover:bg-[#1A3673] hover:text-white dark:border-[#C69214] dark:text-[#C69214] dark:hover:bg-[#C69214] dark:hover:text-slate-900 text-[#1A3673] font-bold text-sm rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer shadow-sm"
-            >
-              <Shield size={16} /> Log In as Admin (Demo)
-            </button>
-          </div>
         </form>
-
-        {/* Divider */}
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-700" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-slate-900 text-slate-500">Or continue with</span>
-            </div>
-          </div>
-
-          {/* Social login placeholders */}
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="w-full inline-flex justify-center py-2.5 px-4 border border-slate-300 dark:border-slate-700 rounded-xl shadow-sm bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              <svg className="h-5 w-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </div>
 
         <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
           Don't have an account?{' '}

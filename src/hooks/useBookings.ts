@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Custom hook for booking CRUD.
- * When Supabase is not configured, reads from localStorage (demo mode).
+ * Reads and writes actual reservations through Supabase.
  */
 export function useBookings() {
   const { user } = useAuth();
@@ -13,30 +13,8 @@ export function useBookings() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchMyBookings = async () => {
-    // ── Demo mode: read from localStorage ─────────────────────────────────
     if (!supabaseConfigured || !user) {
-      try {
-        const stored = localStorage.getItem('margal_confirmed_bookings');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          // Convert localStorage format to Booking shape
-          const mapped: Booking[] = parsed.map((b: any) => ({
-            id: b.id,
-            user_id: 'demo',
-            booking_date: new Date(b.date).toISOString().split('T')[0],
-            time_slots: b.slots || [],
-            total_amount: b.total || 0,
-            status: 'upcoming' as const,
-            customer_name: null,
-            customer_phone: null,
-            notes: null,
-            created_at: b.date || new Date().toISOString(),
-          }));
-          setBookings(mapped);
-        }
-      } catch (e) {
-        console.error('Error reading localStorage bookings', e);
-      }
+      setBookings([]);
       return;
     }
 

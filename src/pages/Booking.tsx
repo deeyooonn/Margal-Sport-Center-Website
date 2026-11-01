@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useBookings } from '../hooks/useBookings';
+import { supabaseConfigured } from '../lib/supabase';
 
 // Types
 type SlotStatus = 'available' | 'booked' | 'selected';
@@ -57,65 +58,16 @@ export function Booking() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
 
-  // Supabase auth — isAdmin comes from the real profile role
-  const { user, isAdmin: supabaseIsAdmin } = useAuth();
-  const { createBooking } = useBookings();
-
-  // Also check localStorage for demo/admin mode fallback
-  const [isAdmin] = useState<boolean>(() => {
-    // First try Supabase (will re-render once auth loads)
-    try {
-      const stored = localStorage.getItem('margal_user_profile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.role === 'admin';
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return false;
-  });
-
-  // Effective admin: Supabase role OR localStorage demo role
-  const effectiveIsAdmin = supabaseIsAdmin || isAdmin;
-
-  // Global Bookings Database State
+  const { user, profile, isAdmin: effectiveIsAdmin } = useAuth();
+  const { createBooking, fetchBookingsForDate, bookings: myBookings } = useBookings();
   const [bookings, setBookings] = useState<Record<string, TimeSlot[]>>({});
-
-  // Confirmed Bookings list (dashboard panel for active session)
-  const [confirmedBookings, setConfirmedBookings] = useState<{
-    id: string;
-    date: Date;
-    slots: TimeSlot[];
-    total: number;
-  }[]>(() => {
-    try {
-      const stored = localStorage.getItem('margal_confirmed_bookings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.map((b: any) => ({
-          ...b,
-          date: new Date(b.date)
-        }));
-      }
-    } catch (e) {
-      console.error('Error loading initial confirmed bookings', e);
-    }
-    return [];
-  });
-
-  // Sync confirmedBookings to localStorage on every change
-  useEffect(() => {
-    try {
-      const serialized = confirmedBookings.map(b => ({
-        ...b,
-        date: b.date.toISOString()
-      }));
-      localStorage.setItem('margal_confirmed_bookings', JSON.stringify(serialized));
-    } catch (e) {
-      console.error('Error auto-syncing bookings to localStorage', e);
-    }
-  }, [confirmedBookings]);
+  const [availabilityReady, setAvailabilityReady] = useState(false);
+  const confirmedBookings = useMemo(() => myBookings.map(booking => ({
+    id: booking.id,
+    date: new Date(booking.booking_date + 'T00:00:00'),
+    slots: booking.time_slots,
+    total: booking.total_amount,
+  })), [myBookings]);
 
   // UI Selection State
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
@@ -146,24 +98,9 @@ export function Booking() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // Helper: check if a specific slot is booked deterministically (for seeding)
-  const getDeterministicBookedState = (date: Date, hour: number) => {
-    const seed = date.getDate() + date.getMonth();
-    return seed * hour % 7 === 0 || seed * hour % 5 === 0;
-  };
-
-  // Helper: Check if all slots on a date are booked
   const checkIfDayIsFull = (date: Date) => {
-    const dateKey = getDateKey(date);
-    if (bookings[dateKey]) {
-      return bookings[dateKey].every(s => s.status === 'booked');
-    }
-    // Fallback to seeded initial state
-    for (let h = 8; h <= 23; h++) {
-      const isBooked = getDeterministicBookedState(date, h);
-      if (!isBooked) return false;
-    }
-    return true;
+    const loaded = bookings[getDateKey(date)];
+    return !!loaded?.length && loaded.every(slot => slot.status === 'booked');
   };
 
   // Generate initial slots for a date
@@ -182,35 +119,46 @@ export function Booking() {
       const endHour12 = endHour > 12 ? endHour - 12 : endHour === 24 ? 12 : endHour;
       const timeLabel = `${startHour12}:00 ${startAmPm} - ${endHour12}:00 ${endAmPm}`;
 
-      const isBooked = getDeterministicBookedState(date, i);
 
       newSlots.push({
         id: `${dateKey}-${i}`,
         timeLabel,
         hour: i,
         rate,
-        status: isBooked ? 'booked' : 'available',
-        customerName: isBooked ? `Ka-Margal Player #${i}` : undefined,
-        customerPhone: isBooked ? `0917-555-01${i}` : undefined,
-        notes: isBooked ? 'Regular court booking reservation.' : undefined,
+        status: 'available',
       });
     }
 
     return newSlots;
   };
 
-  // Synchronize dynamic slot states for selected date
-  const slots = useMemo(() => {
-    if (!selectedDate) return [];
-    const dateKey = getDateKey(selectedDate);
-    if (!bookings[dateKey]) {
-      // Lazy load deterministic state
-      const initial = generateSlotsForDate(selectedDate);
-      setBookings(prev => ({ ...prev, [dateKey]: initial }));
-      return initial;
-    }
-    return bookings[dateKey];
-  }, [selectedDate, bookings]);
+  useEffect(() => {
+    let active = true;
+    setAvailabilityReady(false);
+    setSelectedSlotIds([]);
+    if (!supabaseConfigured || !user) return;
+    const date = selectedDate;
+    fetchBookingsForDate(date).then(records => {
+      if (!active) return;
+      const loaded = generateSlotsForDate(date).map(slot => {
+        const reservation = records.find(record => record.time_slots.some(time => time.hour === slot.hour));
+        return reservation ? {
+          ...slot,
+          status: 'booked' as SlotStatus,
+          customerName: reservation.customer_name || undefined,
+          customerPhone: reservation.customer_phone || undefined,
+          notes: reservation.notes || undefined,
+        } : slot;
+      });
+      setBookings(prev => ({ ...prev, [getDateKey(date)]: loaded }));
+      setAvailabilityReady(true);
+    }).catch(() => {
+      if (active) toast.error('Court availability could not be loaded. Please try again later.');
+    });
+    return () => { active = false; };
+  }, [selectedDate, user?.id]);
+
+  const slots = bookings[getDateKey(selectedDate)] || generateSlotsForDate(selectedDate);
 
   // Extract selected slots details
   const selectedSlotsData = useMemo(() => {
@@ -223,6 +171,7 @@ export function Booking() {
 
   // Main Slot Click handler (completely flexible multi-select!)
   const handleSlotClick = (slotId: string) => {
+    if (!supabaseConfigured || !user || !availabilityReady) return;
     const slot = slots.find((s) => s.id === slotId);
     if (!slot) return;
 
@@ -308,85 +257,38 @@ export function Booking() {
   };
 
   const handleConfirm = async () => {
-    setIsConfirming(true);
-
-    if (selectedDate) {
-      const dateKey = getDateKey(selectedDate);
-      const yyyy = selectedDate.getFullYear();
-      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const dd = String(selectedDate.getDate()).padStart(2, '0');
-      const bookingDateStr = `${yyyy}-${mm}-${dd}`;
-
-      // Update local slot grid state
-      const updatedSlots = bookings[dateKey].map((s) => {
-        if (selectedSlotIds.includes(s.id)) {
-          return {
-            ...s,
-            status: 'booked' as SlotStatus,
-            customerName: 'Online Customer',
-            customerPhone: 'N/A',
-            notes: 'Booked via Web Portal',
-          };
-        }
-        return s;
-      });
-      setBookings(prev => ({ ...prev, [dateKey]: updatedSlots }));
-
-      const slotPayload = selectedSlotsData.map(s => ({
-        id: s.id,
-        timeLabel: s.timeLabel,
-        hour: s.hour,
-        rate: s.rate,
-      }));
-
-      if (user) {
-        // ── Supabase save ──────────────────────────────────────────────────
-        const result = await createBooking({
-          booking_date: bookingDateStr,
-          time_slots: slotPayload,
-          total_amount: totalAmount,
-          customer_name: 'Online Customer',
-          customer_phone: 'N/A',
-          notes: 'Booked via Web Portal',
-        });
-
-        if (result) {
-          // Append to local confirmed panel
-          setConfirmedBookings(prev => [
-            { id: result.id, date: selectedDate, slots: selectedSlotsData, total: totalAmount } as any,
-            ...prev
-          ]);
-          toast.success('Booking Confirmed! See you on the court. 🏀');
-        } else {
-          toast.error('Booking failed. Please try again.');
-        }
-      } else {
-        // ── localStorage fallback (demo/admin mode) ────────────────────────
-        const newBooking = {
-          id: `booking-${Date.now()}`,
-          date: selectedDate.toISOString(),
-          slots: selectedSlotsData,
-          total: totalAmount
-        };
-
-        setConfirmedBookings(prev => [
-          { ...newBooking, date: selectedDate } as any,
-          ...prev
-        ]);
-
-        try {
-          const stored = localStorage.getItem('margal_confirmed_bookings');
-          const existing = stored ? JSON.parse(stored) : [];
-          localStorage.setItem('margal_confirmed_bookings', JSON.stringify([newBooking, ...existing]));
-        } catch (e) {
-          console.error('Error saving confirmed booking to localStorage', e);
-        }
-        toast.success('Booking Confirmed! See you on the court. 🏀');
-      }
+    if (!supabaseConfigured) {
+      toast.error('Online reservations are currently unavailable. Please contact the venue.');
+      return;
     }
-
-    setIsConfirming(false);
-    setSelectedSlotIds([]);
+    if (!user) {
+      toast.error('Please sign in to reserve a court.');
+      return;
+    }
+    if (!availabilityReady || !selectedSlotsData.length || isConfirming) return;
+    setIsConfirming(true);
+    try {
+      const result = await createBooking({
+        booking_date: getDateKey(selectedDate),
+        time_slots: selectedSlotsData.map(({ id, timeLabel, hour, rate }) => ({ id, timeLabel, hour, rate })),
+        total_amount: totalAmount,
+        customer_name: profile?.name || user.email || undefined,
+        customer_phone: profile?.phone || undefined,
+        notes: 'Booked via Web Portal',
+      });
+      if (!result) {
+        toast.error('The reservation could not be saved. Please try again.');
+        return;
+      }
+      const dateKey = getDateKey(selectedDate);
+      setBookings(prev => ({ ...prev, [dateKey]: slots.map(slot => selectedSlotIds.includes(slot.id) ? { ...slot, status: 'booked' as SlotStatus } : slot) }));
+      setSelectedSlotIds([]);
+      toast.success('Booking confirmed. See you on the court!');
+    } catch {
+      toast.error('The reservation could not be saved. Please try again.');
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   return (
@@ -557,7 +459,7 @@ export function Booking() {
                       return (
                         <button
                           key={slot.id}
-                          disabled={isBooked && !effectiveIsAdmin}
+                          disabled={!supabaseConfigured || !user || !availabilityReady || (isBooked && !effectiveIsAdmin)}
                           onClick={() => handleSlotClick(slot.id)}
                           className={`
                             relative flex items-center justify-between p-4 rounded-xl border text-left transition-all group/btn
@@ -632,7 +534,7 @@ export function Booking() {
               {selectedSlotIds.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 flex flex-col items-center gap-3">
                   <Clock size={32} className="opacity-20 animate-pulse" />
-                  <p>Select one or more time slots to book.</p>
+                  <p>{!supabaseConfigured ? 'Online reservations are currently unavailable.' : !user ? 'Sign in to load availability and reserve a court.' : !availabilityReady ? 'Loading court availability...' : 'Select one or more time slots to book.'}</p>
                 </div>
               ) : (
                 <div className="space-y-6">

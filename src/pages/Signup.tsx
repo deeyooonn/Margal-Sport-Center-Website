@@ -15,7 +15,7 @@ export function Signup() {
     setIsLoading(true);
 
     if (!supabaseConfigured) {
-      toast.error('Supabase not connected yet. Add your .env.local credentials to enable real sign-up.');
+      toast.error('Account registration is currently unavailable. Please try again later.');
       setIsLoading(false);
       return;
     }
