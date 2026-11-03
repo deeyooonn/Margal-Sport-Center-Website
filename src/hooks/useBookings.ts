@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase, supabaseConfigured, type Booking } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
+type AvailabilityBooking = Pick<Booking, 'id' | 'booking_date' | 'time_slots' | 'status' | 'customer_name' | 'customer_phone' | 'notes'>;
+
 /**
  * Custom hook for booking CRUD.
  * Reads and writes actual reservations through Supabase.
@@ -38,7 +40,7 @@ export function useBookings() {
   /**
    * Fetch all bookings for a specific date (for slot availability grid).
    */
-  const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
+  const fetchBookingsForDate = async (date: Date): Promise<AvailabilityBooking[]> => {
     if (!supabaseConfigured || !user) return [];
 
     const yyyy = date.getFullYear();
@@ -46,17 +48,12 @@ export function useBookings() {
     const dd = String(date.getDate()).padStart(2, '0');
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('booking_date', dateStr)
-      .neq('status', 'cancelled');
+    const { data, error } = await supabase.rpc('get_booked_slots', { p_booking_date: dateStr });
 
     if (error) {
-      console.error('fetchBookingsForDate error:', error.message);
-      return [];
+      throw new Error('Court availability could not be loaded.');
     }
-    return (data as Booking[]) ?? [];
+    return (data as AvailabilityBooking[]) ?? [];
   };
 
   /**

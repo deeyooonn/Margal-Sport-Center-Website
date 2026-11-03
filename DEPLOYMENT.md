@@ -1,9 +1,15 @@
 # Vercel deployment
 Import `deeyooonn/Margal-Sport-Center-Website` and keep Root Directory at the repository root. The checked-in configuration selects Vite, `npm ci`, `npm run build`, and `dist`. Select Node.js 22.x. SPA rewrites support refreshing /book, /events, /profile, /login, and /signup.
 
-Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` using the intended active Supabase project. These are compiled into the Vite bundle: redeploy after changes. Never use a service-role key in browser variables. At the 2026-11-03 audit, both production variables were absent.
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` using the intended active Supabase project. These are compiled into the Vite bundle: redeploy after changes. Never use a service-role key in browser variables. Production and preview variables were configured on 2026-11-03.
+
+The original Margal project `veqfvhvxzpqskvquqjza` remains inactive and untouched: Supabase rejected restoration because the account already has two active free projects. Margal now shares the restored Client Scrapper project `wmqsqvupaaodvcvekryg`, using separate `profiles`, `bookings` and `booking_slots` tables. Previous Margal accounts and bookings have not been migrated. New accounts receive an ordinary user profile; administrator privileges require an explicit operator change.
+
+`supabase/migrations/001_accounts_and_reservations.sql` has been applied. It enforces ownership, protects roles, computes rates on the server, prevents overlapping hourly reservations with a unique constraint, and exposes availability through `get_booked_slots` without disclosing other customers' contact information. The LeadHunter leads table remains accessible only to the server role.
 
 Enable email/password authentication. Set Supabase Auth's Site URL to `https://margal-sports.vercel.app` and allow intended confirmation-return URLs on that origin. Verify existing `profiles` and `bookings` tables, the new-user profile trigger and row-level policies. Users must not grant themselves administrator roles, and availability reads must not expose other customers' private details.
+
+Email/password and new signups are enabled. Email confirmation remains enabled; actual email delivery and a complete authenticated booking have not been verified. Configure a production SMTP provider before relying on confirmation emails for arbitrary public users. Automatic approval review rejected temporary production test-account and booking creation; no such test writes were performed.
 
 Without service configuration, registration, sign-in and online reservations are unavailable. Public pages remain accessible. There is no local booking substitute.
 
