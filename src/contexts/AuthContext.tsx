@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, supabaseConfigured, type Profile } from '../lib/supabase';
 
@@ -16,6 +16,16 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+async function fetchProfile(userId: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (error) return null;
+    return data as Profile;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -23,70 +33,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(supabaseConfigured); // false immediately when not configured
-
-  const fetchProfile = async (userId: string): Promise<Profile | null> => {
-    if (!supabaseConfigured) return null;
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (error) {
-      console.error('Error fetching profile:', error.message);
-      return null;
-    }
-    return data as Profile;
-  };
+  const [authRevision, setAuthRevision] = useState(0);
+  const currentUserId = useRef<string | null>(null);
+  const profileRevision = useRef(0);
 
   const refreshProfile = async () => {
     if (!user || !supabaseConfigured) return;
+    const revision = ++profileRevision.current;
     const p = await fetchProfile(user.id);
-    if (p) setProfile(p);
+    if (currentUserId.current === user.id && revision === profileRevision.current) {
+      setProfile(p);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    // Skip entirely if Supabase is not configured — app runs in demo mode
+    // Keep public pages available when online account services are unconfigured.
     if (!supabaseConfigured) {
       setLoading(false);
       return;
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const p = await fetchProfile(session.user.id);
-        setProfile(p);
-      }
-      setLoading(false);
-    });
+    let active = true;
+    let receivedEvent = false;
+    const applySession = (next: Session | null) => {
+      if (!active) return;
+      currentUserId.current = next?.user.id ?? null;
+      profileRevision.current++;
+      setProfile(null);
+      setSession(next);
+      setUser(next?.user ?? null);
+      setAuthRevision(value => value + 1);
+      setLoading(Boolean(next?.user));
+    };
 
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          const p = await fetchProfile(session.user.id);
-          setProfile(p);
-        } else {
-          setProfile(null);
-        }
-        setLoading(false);
+      (_event, next) => {
+        receivedEvent = true;
+        applySession(next);
       }
     );
 
-    return () => subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!receivedEvent) applySession(error ? null : data.session);
+    }).catch(() => {
+      if (!receivedEvent) applySession(null);
+    });
+
+    return () => {
+      active = false;
+      currentUserId.current = null;
+      profileRevision.current++;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Profile I/O runs after auth notifications finish. Ignore stale requests.
+  useEffect(() => {
+    if (!user || !supabaseConfigured) return;
+    let active = true;
+    const revision = ++profileRevision.current;
+    fetchProfile(user.id).then(next => {
+      if (active && currentUserId.current === user.id && revision === profileRevision.current) {
+        setProfile(next);
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, [user, authRevision]);
 
   const signOut = async () => {
     if (supabaseConfigured) {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     }
+    currentUserId.current = null;
+    profileRevision.current++;
     setUser(null);
     setSession(null);
     setProfile(null);
+    setLoading(false);
   };
 
   const isAdmin = profile?.role === 'admin';
