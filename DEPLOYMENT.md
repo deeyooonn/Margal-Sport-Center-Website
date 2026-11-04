@@ -9,7 +9,9 @@ The original Margal project `veqfvhvxzpqskvquqjza` remains inactive and untouche
 
 Enable email/password authentication. Set Supabase Auth's Site URL to `https://margal-sports.vercel.app` and allow intended confirmation-return URLs on that origin. Verify existing `profiles` and `bookings` tables, the new-user profile trigger and row-level policies. Users must not grant themselves administrator roles, and availability reads must not expose other customers' private details.
 
-Email/password and new signups are enabled. Email confirmation remains enabled; actual email delivery and a complete authenticated booking have not been verified. Configure a production SMTP provider before relying on confirmation emails for arbitrary public users. Automatic approval review rejected temporary production test-account and booking creation; no such test writes were performed.
+Email/password and new signups are enabled. At the user's explicit request, email confirmation is disabled so signup creates an immediate session without a custom SMTP sender. Password-reset and email-change delivery still need a custom sender for reliable public use.
+
+The user explicitly approved temporary production integration accounts and bookings. All nine checks passed through public signup, password login and actual database APIs: automatic ordinary profiles, protected roles, server-side pricing, private bookings, sanitized availability, overlap rejection, ownership on cancellation, slot reuse after cancellation, and anonymous access restrictions. Temporary accounts/bookings were deleted, and read-only counts confirmed no temporary users, reservations or slots remain. These checks do not establish the admin interface's unrelated editing actions.
 
 Without service configuration, registration, sign-in and online reservations are unavailable. Public pages remain accessible. There is no local booking substitute.
 
